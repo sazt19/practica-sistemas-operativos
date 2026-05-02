@@ -1,0 +1,4 @@
+bin/
+aralmac/
+*.o
+*.exe
