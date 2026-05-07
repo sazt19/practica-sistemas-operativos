@@ -1,22 +1,18 @@
 CC      = gcc
-CFLAGS  = -Wall -Wextra -std=c11 -g -D_WIN32_WINNT=0x0600
+CFLAGS  = -Wall -Wextra -std=c11 -g -D_WIN32_WINNT=0x0600 -Isrc/common
 LDFLAGS = -lws2_32
 
-# Directorios
-SRC     = src
-BIN     = bin
-COMMON  = $(SRC)/common
+SRC    = src
+BIN    = bin
+COMMON = $(SRC)/common
 
-# Fuentes comunes
-COMMON_SRCS = $(COMMON)/pipe_utils.c $(COMMON)/json_utils.c $(COMMON)/cjson/cJSON.c
-COMMON_OBJS = $(COMMON_SRCS:.c=.o)
+COMMON_OBJS = $(COMMON)/pipe_utils.o $(COMMON)/json_utils.o $(COMMON)/cjson/cJSON.o
 
-# Targets
 TARGETS = $(BIN)/ctrllt.exe \
-          $(BIN)/gesfich.exe \
-          $(BIN)/gesprog.exe \
-          $(BIN)/ejecutor.exe \
-          $(BIN)/cliente.exe
+										$(BIN)/gesfich.exe \
+										$(BIN)/gesprog.exe \
+										$(BIN)/ejecutor.exe \
+										$(BIN)/cliente.exe
 
 .PHONY: all clean dirs
 
@@ -27,27 +23,29 @@ dirs:
 	@mkdir -p aralmac/ficheros
 	@mkdir -p aralmac/programas
 
-# ── Compilar cada ejecutable ──────────────────────────────────────────────────
-
-$(BIN)/ctrllt.exe: $(SRC)/ctrllt/main.c $(COMMON_OBJS)
+$(BIN)/ctrllt.exe: $(SRC)/ctrllt/main.o $(COMMON_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-$(BIN)/gesfich.exe: $(SRC)/gesfich/main.c $(COMMON_OBJS)
+$(BIN)/gesfich.exe: $(SRC)/gesfich/main.o $(COMMON_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-$(BIN)/gesprog.exe: $(SRC)/gesprog/main.c $(COMMON_OBJS)
+$(BIN)/gesprog.exe: $(SRC)/gesprog/main.o $(COMMON_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-$(BIN)/ejecutor.exe: $(SRC)/ejecutor/main.c $(COMMON_OBJS)
+$(BIN)/ejecutor.exe: $(SRC)/ejecutor/main.o $(COMMON_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-$(BIN)/cliente.exe: $(SRC)/cliente/main.c $(COMMON_OBJS)
+$(BIN)/cliente.exe: $(SRC)/cliente/main.o $(COMMON_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-# ── Regla genérica .c -> .o ───────────────────────────────────────────────────
 %.o: %.c
-	$(CC) $(CFLAGS) -I$(COMMON) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(COMMON_OBJS) $(TARGETS)
+	rm -f $(SRC)/ctrllt/main.o
+	rm -f $(SRC)/gesfich/main.o
+	rm -f $(SRC)/gesprog/main.o
+	rm -f $(SRC)/ejecutor/main.o
+	rm -f $(SRC)/cliente/main.o
+	rm -f $(COMMON_OBJS)
 	rm -rf $(BIN)

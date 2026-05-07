@@ -178,6 +178,11 @@ int main(int argc, char *argv[]) {
         ruta_arg = "aralmac\\ficheros";  /* valor por defecto */
     }
     strncpy(aralmac_ruta, ruta_arg, sizeof(aralmac_ruta) - 1);
+
+    /* Normalizar barras a Windows */
+    for (char *p = aralmac_ruta; *p; p++) {
+        if (*p == '/') *p = '\\';
+    }
     CreateDirectoryA(aralmac_ruta, NULL);  /* crear si no existe */
 
     InitializeCriticalSection(&cs_contador);

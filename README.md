@@ -1,28 +1,38 @@
 # Ejecutor de Lotes
 
-Sistema de ejecución de procesos por lotes para Windows 11, implementado en C con Named Pipes Win32.
+**Estudiante:** Sara Zuluaga Trujillo
+**Curso:** Sistemas Operativos
+**Plataforma:** Windows 11 — MSYS2 UCRT64
+
+Sistema de ejecución de procesos por lotes implementado en C con Named Pipes Win32.
 
 ## Requisitos
 
 - MSYS2 con entorno **UCRT64**
 - Paquetes necesarios:
-  ```bash
+```bash
   pacman -S mingw-w64-ucrt-x86_64-gcc make
-  ```
-- Biblioteca **cJSON** copiada en `src/common/cjson/` (ver abajo)
+```
+- Biblioteca **cJSON** en `src/common/cjson/`
 
 ## Configuración inicial
 
-### 1. Obtener cJSON
+### 1. Clonar el repositorio
 
 ```bash
-# Desde la raíz del proyecto
-mkdir -p src/common/cjson
-curl -o src/common/cjson/cJSON.h https://raw.githubusercontent.com/DaveGamble/cJSON/master/cJSON.h
-curl -o src/common/cjson/cJSON.c https://raw.githubusercontent.com/DaveGamble/cJSON/master/cJSON.c
+git clone https://github.com/sazt19/practica-sistemas-operativos.git
+cd practica-sistemas-operativos
 ```
 
-### 2. Compilar
+### 2. Obtener cJSON
+
+```bash
+mkdir -p src/common/cjson
+curl -o src/common/cjson/cJSON.h https://raw.githubusercontent.com/DaveGamble/cJSON/master/cJSON.h
+curl -o src/common/cjson/cJSON.c  https://raw.githubusercontent.com/DaveGamble/cJSON/master/cJSON.c
+```
+
+### 3. Compilar
 
 ```bash
 make
@@ -32,13 +42,7 @@ Los ejecutables quedan en `bin/`.
 
 ## Ejecución
 
-### Opción A — Script automático (abre ventanas separadas)
-
-```bash
-./start.sh
-```
-
-### Opción B — Manual (una terminal por servicio)
+Abrir **4 terminales MSYS2** en la raíz del proyecto, en este orden:
 
 ```bash
 # Terminal 1
@@ -50,33 +54,52 @@ Los ejecutables quedan en `bin/`.
 # Terminal 3
 ./bin/ejecutor.exe -x aralmac/ficheros
 
-# Terminal 4 (después de que los anteriores estén listos)
+# Terminal 4 (cuando las anteriores digan "Servidor escuchando")
 ./bin/ctrllt.exe
 ```
 
-## Uso del cliente
+## Ejemplo de flujo completo
 
 ```bash
-# Crear un fichero vacío
-./bin/cliente.exe gesfich CREAR
+# 1. Crear ficheros de entrada y salida
+./bin/cliente.exe gesfich CREAR   # → f-0001
+./bin/cliente.exe gesfich CREAR   # → f-0002
 
-# Leer un fichero
-./bin/cliente.exe gesfich LEER '{"id":"f-0001"}'
+# 2. Cargar contenido en el fichero de entrada
+echo "banana
+apple
+cherry
+date" > /tmp/entrada.txt
+./bin/cliente.exe gesfich ACTUALIZAR '{"id":"f-0001","ruta":"C:/msys64/tmp/entrada.txt"}'
 
-# Actualizar un fichero con contenido local
-./bin/cliente.exe gesfich ACTUALIZAR '{"id":"f-0001","ruta":"C:/datos/entrada.txt"}'
+# 3. Registrar un programa
+./bin/cliente.exe gesprog GUARDAR '{"ejecutable":"C:/Windows/System32/sort.exe","argumentos":[],"ambiente":[]}'
 
-# Registrar un programa
-./bin/cliente.exe gesprog GUARDAR '{"ejecutable":"C:/mi_prog.exe","argumentos":[],"ambiente":[]}'
-
-# Ejecutar un lote
+# 4. Ejecutar el lote
 ./bin/cliente.exe ejecutor EJECUTAR '{"id_programa":"p-0001","fichero_entrada":"f-0001","fichero_salida":"f-0002"}'
 
-# Consultar estado de un lote
+# 5. Consultar estado
 ./bin/cliente.exe ejecutor ESTADO '{"id_lote":"l-0001"}'
 
-# Matar un lote
-./bin/cliente.exe ejecutor MATAR '{"id_lote":"l-0001"}'
+# 6. Ver resultado (frutas ordenadas alfabéticamente)
+./bin/cliente.exe gesfich LEER '{"id":"f-0002"}'
+```
+
+## Referencia del cliente
+
+```bash
+./bin/cliente.exe gesfich  CREAR
+./bin/cliente.exe gesfich  LEER      '{"id":"f-0001"}'
+./bin/cliente.exe gesfich  ACTUALIZAR '{"id":"f-0001","ruta":"C:/ruta/archivo.txt"}'
+./bin/cliente.exe gesfich  BORRAR    '{"id":"f-0001"}'
+
+./bin/cliente.exe gesprog  GUARDAR   '{"ejecutable":"C:/prog.exe","argumentos":[],"ambiente":[]}'
+./bin/cliente.exe gesprog  LEER      '{"id":"p-0001"}'
+./bin/cliente.exe gesprog  BORRAR    '{"id":"p-0001"}'
+
+./bin/cliente.exe ejecutor EJECUTAR  '{"id_programa":"p-0001","fichero_entrada":"f-0001","fichero_salida":"f-0002"}'
+./bin/cliente.exe ejecutor ESTADO    '{"id_lote":"l-0001"}'
+./bin/cliente.exe ejecutor MATAR     '{"id_lote":"l-0001"}'
 ```
 
 ## Estructura
@@ -95,6 +118,5 @@ Los ejecutables quedan en `bin/`.
 │   ├── ficheros/       ← almacenamiento de gesfich
 │   └── programas/      ← almacenamiento de gesprog
 ├── bin/                ← ejecutables compilados
-├── Makefile
-└── start.sh
+└── Makefile
 ```

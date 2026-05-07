@@ -50,15 +50,20 @@ static char *op_ejecutar(cJSON *params) {
     /* Leer metadatos del programa desde aralmac */
     char meta_ruta[512];
     snprintf(meta_ruta, sizeof(meta_ruta),
-             "%s\\..\\programas\\%s\\meta.json", aralmac_ruta, id_prog);
+             "aralmac\\programas\\%s\\meta.json", id_prog);
+    printf("[ejecutor] Buscando meta en: '%s'\n", meta_ruta);
+
 
     FILE *fm = fopen(meta_ruta, "r");
-    if (!fm) return json_construir_respuesta("ERROR", NULL, "Programa no encontrado");
-
+    if (!fm) {
+        printf("[ejecutor] ERROR: no se pudo abrir meta.json\n");
+        return json_construir_respuesta("ERROR", NULL, "Programa no encontrado");
+    }
     fseek(fm, 0, SEEK_END); long tam = ftell(fm); rewind(fm);
     char *meta_str = calloc(tam + 1, 1);
     fread(meta_str, 1, tam, fm);
     fclose(fm);
+    printf("[ejecutor] meta.json contenido: %s\n", meta_str);
 
     cJSON *meta = json_parsear(meta_str);
     free(meta_str);
@@ -71,6 +76,8 @@ static char *op_ejecutar(cJSON *params) {
     char ruta_stdin[512], ruta_stdout[512];
     snprintf(ruta_stdin,  sizeof(ruta_stdin),  "%s\\%s.dat", aralmac_ruta, id_fich_e);
     snprintf(ruta_stdout, sizeof(ruta_stdout), "%s\\%s.dat", aralmac_ruta, id_fich_s);
+    printf("[ejecutor] stdin:  '%s'\n", ruta_stdin);
+    printf("[ejecutor] stdout: '%s'\n", ruta_stdout);
 
     /* Abrir handles de fichero para redirección */
     SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
@@ -107,6 +114,9 @@ static char *op_ejecutar(cJSON *params) {
             strncat(cmdline, arg->valuestring, sizeof(cmdline) - strlen(cmdline) - 1);
         }
     }
+
+    printf("[ejecutor] cmdline: '%s'\n", cmdline);
+    printf("[ejecutor] meta_ruta: '%s'\n", meta_ruta);
 
     BOOL ok = CreateProcessA(NULL, cmdline, NULL, NULL,
                              TRUE,   /* heredar handles */
@@ -236,6 +246,11 @@ int main(int argc, char *argv[]) {
     }
     if (!ruta_arg) ruta_arg = "aralmac\\ficheros";
     strncpy(aralmac_ruta, ruta_arg, sizeof(aralmac_ruta) - 1);
+
+    /* Normalizar barras a Windows */
+    for (char *p = aralmac_ruta; *p; p++) {
+        if (*p == '/') *p = '\\';
+    }
 
     InitializeCriticalSection(&cs_lotes);
     printf("[ejecutor] Iniciando. aralmac='%s'\n", aralmac_ruta);

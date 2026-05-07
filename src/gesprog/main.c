@@ -47,8 +47,13 @@ static char *op_guardar(cJSON *params) {
 
     /* Copiar el ejecutable */
     char dest_exe[512];
-    const char *nombre_exe = strrchr(ejecutable, '\\');
-    nombre_exe = nombre_exe ? nombre_exe + 1 : ejecutable;
+    const char *p1 = strrchr(ejecutable, '\\');
+    const char *p2 = strrchr(ejecutable, '/');
+    const char *nombre_exe;
+    if (p1 && p2) nombre_exe = (p1 > p2 ? p1 : p2) + 1;
+    else if (p1)  nombre_exe = p1 + 1;
+    else if (p2)  nombre_exe = p2 + 1;
+    else          nombre_exe = ejecutable;
     snprintf(dest_exe, sizeof(dest_exe), "%s\\%s", dir_prog, nombre_exe);
     CopyFileA(ejecutable, dest_exe, FALSE);
 
@@ -152,6 +157,11 @@ int main(int argc, char *argv[]) {
     }
     if (!ruta_arg) ruta_arg = "aralmac\\programas";
     strncpy(aralmac_ruta, ruta_arg, sizeof(aralmac_ruta) - 1);
+
+    /* Normalizar barras a Windows */
+    for (char *p = aralmac_ruta; *p; p++) {
+        if (*p == '/') *p = '\\';
+    }
     CreateDirectoryA(aralmac_ruta, NULL);
 
     InitializeCriticalSection(&cs_contador);
